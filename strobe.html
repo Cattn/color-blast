@@ -37,17 +37,23 @@
       <p class="max-w-[60ch] mx-auto">HDR-ready displays will show an even brighter, more saturated blue. On standard displays, you will see a strong SDR blue.</p>
     </main>
   </div>
-<!--   <script>
-  (function(){
-    var isIOS = /iPad|iPhone|iPod/.test(navigator.platform) || (navigator.userAgent.indexOf('Mac') > -1 && 'ontouchend' in document);
-    var vid = document.getElementById('hdr-video');
-    var overlay = document.getElementById('blue-overlay');
-    if (isIOS) {
-      if (vid) vid.style.display = '';
-      if (overlay) overlay.style.display = '';
+  <script>
+    (function(){
+  var colors = ['#ff0000','#00ff00','#0000ff','#ffff00','#ffffff'];
+  var i = 0, last = 0;
+  var STEP_MS = 85;
+  function tick(ts){
+    if (ts - last >= STEP_MS){
+      document.body.style.setProperty('background', colors[i], 'important');
+      i = (i + 1) % colors.length;
+      last = ts;
     }
-  })();
-  </script> -->
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+  </script> 
 </body>
 </html>
+
 
