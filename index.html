@@ -1,0 +1,83 @@
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<style type="text/tailwindcss">
+    #whiter,
+    .even-brighter {
+        backdrop-filter: brightness(10);
+    }
+</style>
+
+<h1 id="whiter"
+      class="font-black text-6xl sm:text-7xl md:text-8xl lg:text-[10rem] select-none text-white leading-snug sm:leading-tight mt-4"
+      title="That is #ffffff">
+      White.
+</h1>
+
+<body>
+    <img id="device-image" src="./media/magic.jpg" alt="" />
+    <video id="device-video" width="640" height="200" poster="./media/white.png" preload="auto" autoplay loop muted controls
+        class="w-full h-1" title="HDR Video" style="display:none">
+        <!-- 
+        ffmpeg -i white1.mp4 -pix_fmt yuv420p10le -color_primaries 9 -color_trc 16 -colorspace 9 -color_range 1 -profile:v 2 -vcodec libvpx-vp9 white.webm
+        -->
+        <source src="./media/white1.webm" type="video/webm" />
+        <!--
+        x265 --input white.yuv --fps 23.976 --frames 24 --input-depth 10 --input-res 3840x2160 --input-csp 1 --profile main10 --hdr --output white.hevc --master-display="L(10000000,5)" --max-cll=10000,10000 --colorprim=9 --transfer=16 && mp4box -add white.hevc white1.mp4
+        -->
+        <source src="./media/white1.mp4" type="video/mp4" />
+        <!-- https://www.avsforum.com/threads/hdr10-test-patterns-set.2943380/ -->
+        <source src="./media/white2.mp4" type="video/mp4" />
+        Turn on JavaScript to see the video.
+    </video>
+
+    <main>
+        <h1>Snow White</h1>
+        <hr />
+        <p>
+          If you're reading this text, congratulations! That means you have a nice
+          HDR-ready monitor and a fresh version of Google Chrome.
+        </p>
+        <hr />
+        <p>
+          This page tricks the browser into using a wider range of colors beyond
+          standard RGB.
+        </p>
+        <hr />
+        <p>
+          The grey backgroung is not actually grey, it is our usual #FFF white.
+        </p>
+        <div>
+          <div class="colors">
+            <div class="color red"></div>
+            <div class="color yellow"></div>
+            <div class="color green"></div>
+            <div class="color cyan"></div>
+            <div class="color blue"></div>
+            <div class="color pink"></div>
+          </div>
+          <p>
+            These colors also lay outside of even P3 color space and will be
+            clamped to white on regular monitors
+          </p>
+        </div>
+      </main>
+<script>
+(function(){
+  var isIOS = /iPad|iPhone|iPod/.test(navigator.platform) || (navigator.userAgent.indexOf('Mac') > -1 && 'ontouchend' in document);
+  var img = document.getElementById('device-image');
+  var vid = document.getElementById('device-video');
+  if (isIOS) {
+    if (img) img.style.display = 'none';
+    if (vid) vid.style.display = '';
+  } else {
+    if (img) img.style.display = '';
+    if (vid) vid.style.display = 'none';
+  }
+})();
+</script>
+</body>
+
+
+

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="style.css">
+  <title>HDR Blue</title>
+  <style type="text/tailwindcss">
+    html, body { height: 100%; }
+    body { margin: 0; background: #0000ff !important; }
+    .full { position: fixed; inset: 0; width: 100%; height: 100%; }
+    #hdr-video { object-fit: cover; z-index: 1; display: none; }
+    #blue-overlay { z-index: 2; display: none; background: #0000ff !important; mix-blend-mode: color; pointer-events: none; }
+    #content { position: relative; z-index: 3; display: grid; place-items: center; min-height: 100vh; padding: 2rem; }
+    .even-brighter { backdrop-filter: brightness(10); }
+    @media (dynamic-range: high) and (color-gamut: p3) {
+      body { background: color(display-p3 0% 0% 220%); }
+      #blue-overlay { background: color(display-p3 0% 0% 220%); }
+    }
+  </style>
+  </head>
+<body>
+<img id="device-image" src="./media/magic.jpg" alt="" />
+  <video id="hdr-video" class="full" playsinline muted autoplay loop preload="auto" poster="./media/white.png">
+    <source src="./media/white1.webm" type="video/webm">
+    <source src="./media/white1.mp4" type="video/mp4">
+    <source src="./media/white2.mp4" type="video/mp4">
+  </video>
+  <div id="blue-overlay" class="full">
+    
+  </div>
+  <div id="">
+    <main class="even-brighter text-center">
+      <h1 class="font-black text-6xl sm:text-7xl md:text-8xl lg:text-[10rem] select-none leading-snug sm:leading-tight mt-4">Blue.</h1>
+      <hr class="my-6" />
+      <p class="max-w-[60ch] mx-auto">HDR-ready displays will show an even brighter, more saturated blue. On standard displays, you will see a strong SDR blue.</p>
+    </main>
+  </div>
+<!--   <script>
+  (function(){
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.platform) || (navigator.userAgent.indexOf('Mac') > -1 && 'ontouchend' in document);
+    var vid = document.getElementById('hdr-video');
+    var overlay = document.getElementById('blue-overlay');
+    if (isIOS) {
+      if (vid) vid.style.display = '';
+      if (overlay) overlay.style.display = '';
+    }
+  })();
+  </script> -->
+</body>
+</html>
+
+
