@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="style.css">
+  <title>HDR Blue</title>
+  <style type="text/tailwindcss">
+    html, body { height: 100%; }
+    body { margin: 0; background: #fff !important; }
+    .full { position: fixed; inset: 0; width: 100%; height: 100%; }
+    #hdr-video { object-fit: cover; z-index: 1; display: none; }
+    #blue-overlay { z-index: 2; display: none; background: #fff !important; mix-blend-mode: color; pointer-events: none; }
+    #content { position: relative; z-index: 3; display: grid; place-items: center; min-height: 100vh; padding: 2rem; }
+    .even-brighter { backdrop-filter: brightness(10); }
+    @media (dynamic-range: high) and (color-gamut: p3) {
+      body { background: color(display-p3 0% 0% 220%); }
+      #blue-overlay { background: color(display-p3 0% 0% 220%); }
+    }
+  </style>
+  </head>
+<body>
+<img id="device-image" src="./media/magic.jpg" alt="" />
+  <video id="hdr-video" class="full" playsinline muted autoplay loop preload="auto" poster="./media/white.png">
+    <source src="./media/white1.webm" type="video/webm">
+    <source src="./media/white1.mp4" type="video/mp4">
+    <source src="./media/white2.mp4" type="video/mp4">
+  </video>
+  <div id="blue-overlay" class="full">
+    
+  </div>
+  <div id="bg" class="h-screen" style="z-index: 3; display: none;">
+    <main class="even-brighter text-center h-screen"></main>
+  </div>
+  <div id="toolbar" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-white/80 backdrop-blur px-3 py-2 rounded">
+    <button class="w-8 h-8 rounded-full border" data-color="#ff0000" style="background:#ff0000"></button>
+    <button class="w-8 h-8 rounded-full border" data-color="#00ff00" style="background:#00ff00"></button>
+    <button class="w-8 h-8 rounded-full border" data-color="#0000ff" style="background:#0000ff"></button>
+    <button class="w-8 h-8 rounded-full border" data-color="#ffff00" style="background:#ffff00"></button>
+    <button class="w-8 h-8 rounded-full border" data-color="#ffffff" style="background:#ffffff"></button>
+    <button id="rainbow" class="ml-2 px-3 py-1 rounded border text-sm">Rainbow</button>
+  </div>
+  <canvas id="paint" class="full" style="z-index: 4; touch-action: none;"></canvas>
+  <script>
+    (function(){
+  var colors = ['#ff0000','#00ff00','#0000ff','#ffff00','#ffffff'];
+  var i = 0;
+  var toolbar = document.getElementById('toolbar');
+  var rainbow = false;
+  var selected = colors[0];
+  toolbar.addEventListener('click', function(e){
+    var t = e.target;
+    if (t.id === 'rainbow'){ rainbow = true; return; }
+    var c = t.getAttribute('data-color');
+    if (c){ rainbow = false; selected = c; }
+  });
+  window.__isRainbow = function(){ return rainbow; };
+  window.__getSelectedColor = function(){ return selected; };
+})();
+  </script> 
+  <script>
+  (function(){
+    var canvas = document.getElementById('paint');
+    var ctx = canvas.getContext('2d');
+    var drawing = false;
+    var lastX = 0, lastY = 0;
+    var points = [];
+    var strokeColor = '#ff0000';
+    var liveRainbow = false;
+    var rainbowColors = ['#ff0000','#00ff00','#0000ff','#ffff00','#ffffff'];
+    var liveColorIndex = 0;
+    var lastColorChange = 0;
+    var RAINBOW_STEP_MS = 85;
+    var rainbowLayers = [];
+    var rainbowAnimId = 0;
+    var rainbowIdx = 0;
+    var rainbowLast = 0;
+    var dpr = Math.max(1, window.devicePixelRatio || 1);
+    function animateRainbow(ts){
+      if (rainbowLayers.length === 0){ rainbowAnimId = 0; return; }
+      if (ts - rainbowLast >= RAINBOW_STEP_MS){
+        for (var r = 0; r < rainbowLayers.length; r++){
+          rainbowLayers[r].style.background = rainbowColors[rainbowIdx];
+        }
+        rainbowIdx = (rainbowIdx + 1) % rainbowColors.length;
+        rainbowLast = ts;
+      }
+      rainbowAnimId = requestAnimationFrame(animateRainbow);
+    }
+    function startRainbowAnim(){ if (!rainbowAnimId) { rainbowLast = 0; rainbowAnimId = requestAnimationFrame(animateRainbow); } }
+    function resize(){
+      var w = window.innerWidth;
+      var h = window.innerHeight;
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 40;
+    }
+    function start(x, y){
+      drawing = true;
+      points = [];
+      liveRainbow = (window.__isRainbow && window.__isRainbow()) || false;
+      if (liveRainbow){
+        liveColorIndex = 0;
+        lastColorChange = 0;
+        ctx.strokeStyle = rainbowColors[liveColorIndex];
+      } else {
+        strokeColor = (window.__getSelectedColor && window.__getSelectedColor()) || '#ff0000';
+        ctx.strokeStyle = strokeColor;
+      }
+      lastX = x; lastY = y;
+      points.push([x, y]);
+    }
+    function draw(x, y, ts){
+      if (!drawing) return;
+      if (liveRainbow){
+        if (!lastColorChange || (ts - lastColorChange) >= RAINBOW_STEP_MS){
+          ctx.strokeStyle = rainbowColors[liveColorIndex];
+          liveColorIndex = (liveColorIndex + 1) % rainbowColors.length;
+          lastColorChange = ts;
+        }
+      }
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      points.push([x, y]);
+      lastX = x; lastY = y;
+    }
+    function commit(points, color, isRainbow){
+      var w = window.innerWidth;
+      var h = window.innerHeight;
+      var mask = document.createElement('canvas');
+      mask.width = Math.floor(w * dpr);
+      mask.height = Math.floor(h * dpr);
+      var mctx = mask.getContext('2d');
+      mctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      mctx.lineCap = 'round';
+      mctx.lineJoin = 'round';
+      mctx.lineWidth = 40;
+      mctx.strokeStyle = '#ffffff';
+      mctx.beginPath();
+      var p0 = points[0];
+      mctx.moveTo(p0[0], p0[1]);
+      for (var k = 1; k < points.length; k++){
+        var p = points[k];
+        mctx.lineTo(p[0], p[1]);
+      }
+      mctx.stroke();
+      var url = 'url(' + mask.toDataURL('image/png') + ')';
+      var layer = document.createElement('div');
+      layer.className = 'h-screen';
+      layer.style.position = 'fixed';
+      layer.style.inset = '0';
+      layer.style.zIndex = 3;
+      layer.style.background = color;
+      layer.style.pointerEvents = 'none';
+      layer.style.webkitMaskImage = url;
+      layer.style.maskImage = url;
+      layer.style.webkitMaskRepeat = 'no-repeat';
+      layer.style.maskRepeat = 'no-repeat';
+      layer.style.webkitMaskSize = '100% 100%';
+      layer.style.maskSize = '100% 100%';
+      layer.style.webkitMaskPosition = '0 0';
+      layer.style.maskPosition = '0 0';
+      var m = document.createElement('main');
+      m.className = 'even-brighter text-center h-screen';
+      layer.appendChild(m);
+      document.body.insertBefore(layer, canvas);
+      if (isRainbow){ rainbowLayers.push(layer); startRainbowAnim(); }
+    }
+    function end(){
+      if (!drawing) return;
+      drawing = false;
+      if (points.length > 1) { commit(points.slice(), liveRainbow ? rainbowColors[0] : strokeColor, liveRainbow); }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      points = [];
+    }
+    canvas.addEventListener('pointerdown', function(e){
+      canvas.setPointerCapture(e.pointerId);
+      start(e.clientX, e.clientY);
+    });
+    canvas.addEventListener('pointermove', function(e){
+      draw(e.clientX, e.clientY, e.timeStamp || performance.now());
+    });
+    window.addEventListener('pointerup', function(){ end(); });
+    window.addEventListener('resize', resize);
+    resize();
+  })();
+  </script>
+</body>
+</html>
+
+
